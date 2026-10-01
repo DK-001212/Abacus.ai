@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Independent educational demo website for Abacus.AI, ChatGPT/OpenAI, AI agents, models, and AI productivity workflows." />
+    <meta name="description" content="Independent educational demo website for Abacus.AI, AI agents, models, and AI productivity workflows." />
     <title>AI Platform Showcase</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -18,7 +18,6 @@
           <a href="index.html">Home</a>
           <a href="abacus.html">Abacus.AI</a>
           <a href="features.html">AI Features</a>
-          <a href="chatgpt.html">ChatGPT</a>
           <a href="agents.html">AI Agents</a>
           <a href="models.html">Models</a>
           <a href="use-cases.html">Use Cases</a>
@@ -43,7 +42,7 @@
             <p>Discover intelligent AI models, agents, automation, generative AI, and productivity tools in one modern platform.</p>
             <div class="hero-actions">
               <a href="abacus.html" class="btn btn-primary">Explore Abacus.AI</a>
-              <a href="chatgpt.html" class="btn btn-secondary">Explore ChatGPT</a>
+              <a href="#ai-chat-demo" class="btn btn-secondary">Try the AI Demo</a>
             </div>
             <div class="hero-stats">
               <div class="stat">
@@ -146,20 +145,20 @@
               <div class="feature-icon">🗣️</div>
               <h3>AI Assistants</h3>
               <p>Productivity-focused conversational systems that help with questions, drafting, and execution.</p>
-              <a href="chatgpt.html" class="btn btn-secondary">Learn More</a>
+              <a href="#ai-chat-demo" class="btn btn-secondary">Try Demo</a>
             </article>
           </div>
         </div>
       </section>
 
-      <section class="section">
+      <section id="ai-chat-demo" class="section">
         <div class="container">
           <div class="demo-box">
             <div class="demo-layout">
               <div>
                 <span class="small-label">Interactive AI Demo</span>
-                <h2>Try a simulated workspace</h2>
-                <p>Demo Mode — simulated AI response. This is an educational mockup and does not connect to a live model.</p>
+                <h2>AI Chat Assistant</h2>
+                <p>Live AI chat requires an OpenAI API key configured in Netlify. This page will use a real model when the environment is set up.</p>
                 <div class="demo-controls">
                   <label for="demo-task">Task</label>
                   <select id="demo-task" data-demo-task>
@@ -177,8 +176,8 @@
                 </div>
               </div>
               <div class="demo-output" data-demo-output>
-                <strong>Demo Mode — simulated AI response</strong><br /><br />
-                This preview is for demonstration purposes only. No live API is connected.
+                <strong>AI chat ready</strong><br /><br />
+                If the OpenAI API key is configured in Netlify, this interface will generate a live response. Otherwise, it remains in a local fallback state.
               </div>
             </div>
           </div>
@@ -199,7 +198,7 @@
               <li><a href="index.html">Home</a></li>
               <li><a href="abacus.html">Abacus.AI</a></li>
               <li><a href="features.html">AI Features</a></li>
-              <li><a href="chatgpt.html">ChatGPT</a></li>
+              <li><a href="agents.html">AI Agents</a></li>
             </ul>
           </div>
           <div>

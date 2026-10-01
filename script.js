@@ -135,7 +135,7 @@ const demoOutput = document.querySelector('[data-demo-output]');
 const generateBtn = document.querySelector('[data-generate-demo]');
 
 if (generateBtn && demoPrompt && demoOutput) {
-  const responses = {
+  const fallbackResponses = {
     summarize: 'Summary: This workflow reviews the key ideas, groups themes, and surfaces the most useful takeaways with an actionable summary for decision-makers.',
     explain: 'Explanation: The concept is best framed as a workflow that converts an input into structured steps, tools, and outputs while keeping human oversight in the loop.',
     ideas: 'Ideas: 1) automate a recurring reporting workflow, 2) create a research brief, 3) turn customer support notes into action lists.',
@@ -145,16 +145,47 @@ if (generateBtn && demoPrompt && demoOutput) {
     answer: 'Answer: The strongest approach is to start with a small, measurable workflow and validate results before scaling to broader automation.'
   };
 
-  generateBtn.addEventListener('click', () => {
+  generateBtn.addEventListener('click', async () => {
     const task = demoTask ? demoTask.value : 'summarize';
     const prompt = demoPrompt.value.trim() || 'Explain how an AI assistant can support a small team.';
-    const response = responses[task] || responses.summarize;
-    demoOutput.innerHTML = `
-      <strong>Demo Mode — simulated AI response</strong><br><br>
-      <strong>Prompt:</strong> ${prompt}<br><br>
-      <strong>Task:</strong> ${task}<br><br>
-      ${response}
-    `;
+
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generating...';
+    demoOutput.innerHTML = '<strong>Thinking...</strong><br><br>Requesting a live response from the AI service.';
+
+    try {
+      const response = await fetch('/.netlify/functions/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, task })
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(errorBody || 'Request failed');
+      }
+
+      const data = await response.json();
+      const answer = data.answer || 'No response received.';
+      demoOutput.innerHTML = `
+        <strong>AI response</strong><br><br>
+        <strong>Prompt:</strong> ${prompt}<br><br>
+        <strong>Task:</strong> ${task}<br><br>
+        ${answer}
+      `;
+    } catch (error) {
+      const fallback = fallbackResponses[task] || fallbackResponses.summarize;
+      demoOutput.innerHTML = `
+        <strong>Live AI chat is not connected in this local preview</strong><br><br>
+        <strong>Prompt:</strong> ${prompt}<br><br>
+        <strong>Task:</strong> ${task}<br><br>
+        <em>This site requires an OpenAI API key configured in Netlify for live responses.</em><br><br>
+        ${fallback}
+      `;
+    } finally {
+      generateBtn.disabled = false;
+      generateBtn.textContent = 'Generate';
+    }
   });
 }
 
