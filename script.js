@@ -145,6 +145,11 @@ if (generateBtn && demoPrompt && demoOutput) {
     answer: 'Answer: The strongest approach is to start with a small, measurable workflow and validate results before scaling to broader automation.'
   };
 
+  const getChatEndpoint = () => {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    return isLocal ? '/api/chat' : '/.netlify/functions/chat';
+  };
+
   generateBtn.addEventListener('click', async () => {
     const task = demoTask ? demoTask.value : 'summarize';
     const prompt = demoPrompt.value.trim() || 'Explain how an AI assistant can support a small team.';
@@ -154,18 +159,19 @@ if (generateBtn && demoPrompt && demoOutput) {
     demoOutput.innerHTML = '<strong>Thinking...</strong><br><br>Requesting a live response from the AI service.';
 
     try {
-      const response = await fetch('/.netlify/functions/chat', {
+      const response = await fetch(getChatEndpoint(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, task })
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(errorBody || 'Request failed');
+        const message = data?.error || 'Request failed';
+        const fallback = data?.fallback || fallbackResponses[task] || fallbackResponses.summarize;
+        throw new Error(`${message}\n${fallback}`);
       }
 
-      const data = await response.json();
       const answer = data.answer || 'No response received.';
       demoOutput.innerHTML = `
         <strong>AI response</strong><br><br>
@@ -174,12 +180,17 @@ if (generateBtn && demoPrompt && demoOutput) {
         ${answer}
       `;
     } catch (error) {
+      const detail = (error && error.message) ? error.message : 'Unknown AI error';
       const fallback = fallbackResponses[task] || fallbackResponses.summarize;
+      const message = detail.includes('GEMINI_API_KEY') || detail.includes('OPENAI_API_KEY') || detail.includes('configured')
+        ? '<em>This site needs a Gemini or OpenAI API key in the server environment to generate live responses.</em>'
+        : '<em>The live AI request failed. Check the backend environment or API key.</em>';
+
       demoOutput.innerHTML = `
-        <strong>Live AI chat is not connected in this local preview</strong><br><br>
+        <strong>Live AI request failed</strong><br><br>
         <strong>Prompt:</strong> ${prompt}<br><br>
         <strong>Task:</strong> ${task}<br><br>
-        <em>This site requires an OpenAI API key configured in Netlify for live responses.</em><br><br>
+        ${message}<br><br>
         ${fallback}
       `;
     } finally {
