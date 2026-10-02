@@ -45,11 +45,11 @@ export default async function handler(request) {
     );
   }
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return new Response(
       JSON.stringify({
-        error: 'No AI API key is configured. Add GEMINI_API_KEY (or OPENAI_API_KEY) in the Netlify site environment variables.'
+        error: 'Gemini API key is not configured. Add GEMINI_API_KEY in the Netlify site environment variables.'
       }),
       {
         status: 500,
@@ -61,44 +61,21 @@ export default async function handler(request) {
   const instruction = TASK_INSTRUCTIONS[task] || TASK_INSTRUCTIONS.answer;
 
   try {
-    const useGemini = Boolean(process.env.GEMINI_API_KEY);
-    const aiResponse = useGemini
-      ? await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{ text: `You are a helpful AI assistant for an AI SaaS marketing website. ${instruction} Keep responses clear, practical, and concise. Do not claim affiliations or partnerships unless explicitly stated in the prompt.` }]
-            },
-            contents: [{ role: 'user', parts: [{ text: prompt }] }]
-          })
-        })
-      : await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            temperature: 0.7,
-            messages: [
-              {
-                role: 'system',
-                content: `You are a helpful AI assistant for an AI SaaS marketing website. ${instruction} Keep responses clear, practical, and concise. Do not claim affiliations or partnerships unless explicitly stated in the prompt.`
-              },
-              {
-                role: 'user',
-                content: prompt
-              }
-            ]
-          })
-        });
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: `You are a helpful AI assistant for an AI SaaS marketing website. ${instruction} Keep responses clear, practical, and concise. Do not claim affiliations or partnerships unless explicitly stated in the prompt.` }]
+        },
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      })
+    });
 
     const data = await aiResponse.json();
 
     if (!aiResponse.ok) {
-      const message = data?.error?.message || 'AI request failed.';
+      const message = data?.error?.message || 'Gemini request failed.';
       return new Response(
         JSON.stringify({ error: message }),
         {
@@ -108,9 +85,7 @@ export default async function handler(request) {
       );
     }
 
-    const answer = useGemini
-      ? data?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim()
-      : data?.choices?.[0]?.message?.content?.trim();
+    const answer = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
 
     if (!answer) {
       return new Response(
@@ -130,7 +105,7 @@ export default async function handler(request) {
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: 'Unexpected server error while contacting OpenAI.' }),
+      JSON.stringify({ error: 'Unexpected server error while contacting Gemini.' }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
