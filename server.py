@@ -38,33 +38,36 @@ def fallback_response(prompt: str, task: str):
 
 
 def query_ai(prompt: str, task: str):
-    api_key = os.environ.get('GEMINI_API_KEY')
+    api_key = os.environ.get('LIQUID_API_KEY')
     if not api_key:
-        raise RuntimeError('Gemini API key is not configured. Add GEMINI_API_KEY.')
+        raise RuntimeError('Liquid API key is not configured. Add LIQUID_API_KEY.')
 
     import urllib.request
 
+    base_url = os.environ.get('LIQUID_API_BASE_URL', 'https://api.liquid.ai/v1').rstrip('/')
     payload = {
-        'systemInstruction': {
-            'parts': [{
-                'text': f'You are a helpful AI assistant for an AI SaaS website. {task}. Keep responses concise, practical, and professional.'
-            }]
-        },
-        'contents': [{
-            'role': 'user',
-            'parts': [{'text': prompt}]
-        }]
+        'model': os.environ.get('LIQUID_MODEL', 'LFM2.5-1.2B-Instruct'),
+        'temperature': 0.7,
+        'messages': [
+            {
+                'role': 'system',
+                'content': f'You are a helpful AI assistant for an AI SaaS website. {task}. Keep responses concise, practical, and professional.'
+            },
+            {'role': 'user', 'content': prompt}
+        ]
     }
     request = urllib.request.Request(
-        f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}',
+        f'{base_url}/chat/completions',
         data=json.dumps(payload).encode('utf-8'),
-        headers={'Content-Type': 'application/json'},
+        headers={
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {api_key}'
+        },
         method='POST'
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         data = json.loads(response.read().decode('utf-8'))
-    parts = data['candidates'][0]['content']['parts']
-    return ''.join(part.get('text', '') for part in parts).strip()
+    return data['choices'][0]['message']['content'].strip()
 
 
 class Handler(BaseHTTPRequestHandler):

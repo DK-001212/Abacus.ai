@@ -182,8 +182,8 @@ if (generateBtn && demoPrompt && demoOutput) {
     } catch (error) {
       const detail = (error && error.message) ? error.message : 'Unknown AI error';
       const fallback = fallbackResponses[task] || fallbackResponses.summarize;
-      const message = detail.includes('GEMINI_API_KEY') || detail.includes('configured')
-        ? '<em>This site needs a Gemini API key in the server environment to generate live responses.</em>'
+      const message = detail.includes('LIQUID_API_KEY') || detail.includes('configured')
+        ? '<em>This site needs a Liquid API key in the server environment to generate live responses.</em>'
         : '<em>The live AI request failed. Check the backend environment or API key.</em>';
 
       demoOutput.innerHTML = `

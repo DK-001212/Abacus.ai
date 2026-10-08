@@ -45,11 +45,11 @@ export default async function handler(request) {
     );
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.LIQUID_API_KEY;
   if (!apiKey) {
     return new Response(
       JSON.stringify({
-        error: 'Gemini API key is not configured. Add GEMINI_API_KEY in the Netlify site environment variables.'
+        error: 'Liquid API key is not configured. Add LIQUID_API_KEY in the Netlify site environment variables.'
       }),
       {
         status: 500,
@@ -61,21 +61,30 @@ export default async function handler(request) {
   const instruction = TASK_INSTRUCTIONS[task] || TASK_INSTRUCTIONS.answer;
 
   try {
-    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    const baseUrl = (process.env.LIQUID_API_BASE_URL || 'https://api.liquid.ai/v1').replace(/\/+$/, '');
+    const aiResponse = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
       body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: `You are a helpful AI assistant for an AI SaaS marketing website. ${instruction} Keep responses clear, practical, and concise. Do not claim affiliations or partnerships unless explicitly stated in the prompt.` }]
-        },
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+        model: process.env.LIQUID_MODEL || 'LFM2.5-1.2B-Instruct',
+        temperature: 0.7,
+        messages: [
+          {
+            role: 'system',
+            content: `You are a helpful AI assistant for an AI SaaS marketing website. ${instruction} Keep responses clear, practical, and concise. Do not claim affiliations or partnerships unless explicitly stated in the prompt.`
+          },
+          { role: 'user', content: prompt }
+        ]
       })
     });
 
     const data = await aiResponse.json();
 
     if (!aiResponse.ok) {
-      const message = data?.error?.message || 'Gemini request failed.';
+      const message = data?.error?.message || 'Liquid API request failed.';
       return new Response(
         JSON.stringify({ error: message }),
         {
@@ -85,7 +94,7 @@ export default async function handler(request) {
       );
     }
 
-    const answer = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
+    const answer = data?.choices?.[0]?.message?.content?.trim();
 
     if (!answer) {
       return new Response(
@@ -105,7 +114,7 @@ export default async function handler(request) {
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: 'Unexpected server error while contacting Gemini.' }),
+      JSON.stringify({ error: 'Unexpected server error while contacting Liquid AI.' }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
