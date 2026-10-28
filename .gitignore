@@ -1,0 +1,9 @@
+# Local environment secrets
+.env
+.env.local
+.env.*.local
+
+# Python and Vercel
+.venv/
+__pycache__/
+.vercel/

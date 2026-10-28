@@ -145,10 +145,7 @@ if (generateBtn && demoPrompt && demoOutput) {
     answer: 'Answer: The strongest approach is to start with a small, measurable workflow and validate results before scaling to broader automation.'
   };
 
-  const getChatEndpoint = () => {
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    return isLocal ? '/api/chat' : '/.netlify/functions/chat';
-  };
+  const getChatEndpoint = () => '/api/chat';
 
   generateBtn.addEventListener('click', async () => {
     const task = demoTask ? demoTask.value : 'summarize';
